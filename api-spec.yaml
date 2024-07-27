@@ -1,0 +1,174 @@
+openapi: 3.0.0
+info:
+  title: "Newsfeed API"
+  version: "1.0.0"
+  description: "API for managing posts and comments"
+servers:
+  - url: "https://newsfeed-service-ogwuwsx3mq-de.a.run.app"
+paths:
+  /posts/images:
+    post:
+      summary: Generate a signed URL for uploading a post image
+      tags: [ posts ]
+      responses:
+        '200':
+          description: Successful response with signed URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignedUrlResponse'
+  /posts:
+    post:
+      summary: Create a new post
+      tags: [ posts ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCreateRequest'
+      responses:
+        '200':
+          description: Successful response with newly created post ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ID:
+                    type: integer
+                    format: int64
+        '400':
+          description: Bad request (e.g., invalid JSON body)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    get:
+      summary: Retrieve posts with their comments
+      tags: [ posts ]
+      responses:
+        '200':
+          description: Successful response with an array of posts and comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PostWithComments'
+  /posts/{postID}/comments:
+    post:
+      summary: Create a new comment for a specific post
+      tags: [ comments ]
+      parameters:
+        - name: postID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCommentRequest'
+      responses:
+        '200':
+          description: Successful response with newly created comment ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ID:
+                    type: integer
+                    format: int64
+        '400':
+          description: Bad request (e.g., invalid JSON body)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /comments/{commentID}:
+    delete:
+      summary: Delete a comment by its ID
+      tags: [ comments ]
+      parameters:
+        - name: commentID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful deletion
+        '404':
+          description: Comment not found
+  /health:
+    get:
+      summary: Health check endpoint
+      tags: [ health ]
+      responses:
+        '200':
+          description: Service is healthy
+components:
+  schemas:
+    PostCreateRequest:
+      type: object
+      properties:
+        caption:
+          type: string
+          description: Caption for the post
+        image_url:
+          type: string
+          description: (Optional) URL of the post image
+    PostWithComments:
+      type: object
+      properties:
+        ID:
+          type: integer
+          format: int64
+          description: Unique identifier for the post
+        caption:
+          type: string
+          description: Caption for the post
+        image_url:
+          type: string
+          description: (Optional) URL of the post image
+        creator:
+          type: string
+          description: User who created the post
+        created_at:
+          type: string
+          format: date-time
+          description: Time when the post was created
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+    CreateCommentRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          description: Content of the comment
+    Comment:
+      type: object
+      properties:
+        ID:
+          type: integer
+          format: int
+    SignedUrlResponse:
+      type: object
+      properties:
+        signed_url:
+          type: string
+          description: The signed URL for uploading the image

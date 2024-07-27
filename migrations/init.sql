@@ -21,5 +21,5 @@ CREATE TABLE comments
     deleted_at TIMESTAMP DEFAULT NULL
 );
 
-CREATE INDEX idx_comments_post_id ON comments (post_id);
+CREATE INDEX idx_comments_post_id_created_at ON comments (post_id, created_at);
 

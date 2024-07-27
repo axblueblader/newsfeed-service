@@ -4,11 +4,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"newsfeed-service/domains"
-	"newsfeed-service/service"
+	"newsfeed-service/services"
 )
 
 type PostsHandler struct {
-	PostService service.PostService
+	PostService services.PostService
 }
 
 func (h PostsHandler) CreatePost(c *gin.Context) {

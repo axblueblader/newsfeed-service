@@ -1,10 +1,10 @@
-package service_test
+package services_test
 
 import (
 	"errors"
 	"newsfeed-service/domains"
 	"newsfeed-service/models"
-	"newsfeed-service/service"
+	"newsfeed-service/services"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -43,7 +43,7 @@ func TestCreateCommentSuccess(t *testing.T) {
 	mockDB.On("Create", expectedComment).Return(expectedComment, nil)
 
 	// Create service with mock
-	commentService := service.NewCommentService(mockDB)
+	commentService := services.NewCommentService(mockDB)
 
 	// Create comment request
 	req := domains.CreateCommentRequest{
@@ -66,7 +66,7 @@ func TestCreateCommentError(t *testing.T) {
 	mockDB.On("Create", mock.Anything).Return(nil, expectedError)
 
 	// Create service with mock
-	commentService := service.NewCommentService(mockDB)
+	commentService := services.NewCommentService(mockDB)
 
 	// Create comment request
 	req := domains.CreateCommentRequest{

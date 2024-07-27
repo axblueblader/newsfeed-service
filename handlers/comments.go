@@ -4,12 +4,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"newsfeed-service/domains"
-	"newsfeed-service/service"
+	"newsfeed-service/services"
 	"strconv"
 )
 
 type CommentsHandler struct {
-	CommentService service.CommentService
+	CommentService services.CommentService
 }
 
 func (h CommentsHandler) CreateComment(c *gin.Context) {

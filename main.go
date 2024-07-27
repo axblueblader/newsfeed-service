@@ -6,12 +6,11 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
-	"net/http"
 	"newsfeed-service/config"
 	"newsfeed-service/handlers"
 	"newsfeed-service/middlewares"
 	"newsfeed-service/models"
-	"newsfeed-service/service"
+	"newsfeed-service/services"
 	"newsfeed-service/storage"
 )
 
@@ -51,8 +50,8 @@ func main() {
 	objectStorage := storage.NewObjectStorage("i am an aws client")
 
 	// internal services
-	postService := service.NewPostService(postsDB)
-	commentService := service.NewCommentService(commentsDB)
+	postService := services.NewPostService(postsDB)
+	commentService := services.NewCommentService(commentsDB)
 
 	r := gin.Default()
 
@@ -77,11 +76,8 @@ func main() {
 	r.POST("/posts/:postID/comments", commentsHandler.CreateComment)
 	r.DELETE("/comments/:commentID", commentsHandler.DeleteComment)
 
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Server is healthy",
-		})
-	})
+	r.GET("/", handlers.Healthcheck)
+	r.GET("/health", handlers.Healthcheck)
 
 	err = r.Run(":" + config.Env().Port)
 	if err != nil {

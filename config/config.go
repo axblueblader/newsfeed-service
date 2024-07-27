@@ -1,5 +1,7 @@
 package config
 
+import "os"
+
 type Config struct {
 	Port                string
 	PostImageBucketName string
@@ -14,8 +16,12 @@ func Env() *Config {
 
 func Init() {
 	// load from files or environment variables
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 	c = &Config{
-		Port:                "8080",
+		Port:                port,
 		PostImageBucketName: "post-image-bucket",
 		CommentsLimit:       2,
 	}
