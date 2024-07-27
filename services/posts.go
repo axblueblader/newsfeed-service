@@ -16,7 +16,7 @@ func NewPostService(postDB storage.PostDB) PostService {
 
 type PostService interface {
 	CreatePost(userID string, req domains.PostCreateRequest) (uint, error)
-	GetPostsWithComments(userID string) ([]domains.PostWithComments, error)
+	GetPostsWithComments(userID string, cursor *uint, pageSize int) (*domains.PostsPagedResult, error)
 }
 
 func (s postService) CreatePost(userID string, req domains.PostCreateRequest) (uint, error) {
@@ -31,11 +31,14 @@ func (s postService) CreatePost(userID string, req domains.PostCreateRequest) (u
 	return post.ID, nil
 }
 
-func (s postService) GetPostsWithComments(userID string) ([]domains.PostWithComments, error) {
-	posts, err := s.postDB.GetAllWithComments(userID)
-	var postsWithComments []domains.PostWithComments
+func (s postService) GetPostsWithComments(userID string, cursor *uint, pageSize int) (*domains.PostsPagedResult, error) {
+	posts, nextCursor, err := s.postDB.GetAllWithComments(userID, cursor, pageSize)
+	if err != nil {
+		return nil, err
+	}
+	postsWithComments := make([]domains.PostWithComments, 0)
 	for _, post := range posts {
-		var comments []domains.Comment
+		comments := make([]domains.Comment, 0)
 		for _, comment := range post.Comments {
 			comments = append(comments, domains.Comment{
 				ID:        comment.ID,
@@ -54,5 +57,9 @@ func (s postService) GetPostsWithComments(userID string) ([]domains.PostWithComm
 			Comments:  comments,
 		})
 	}
-	return postsWithComments, err
+	return &domains.PostsPagedResult{
+		Posts:      postsWithComments,
+		NextCursor: nextCursor,
+		PageSize:   pageSize,
+	}, nil
 }

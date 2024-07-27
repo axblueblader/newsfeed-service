@@ -17,6 +17,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SignedUrlResponse'
+    put:
+      summary: Webhook API to process the uploaded image into correct dimension and file type
+      tags: [ posts ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImageUploadedRequest'
+      responses:
+        '200':
+          description: Successful response
   /posts:
     post:
       summary: Create a new post
@@ -50,6 +62,11 @@ paths:
     get:
       summary: Retrieve posts with their comments
       tags: [ posts ]
+      parameters:
+        - in: query
+          name: PostGetAllRequest
+          schema:
+            $ref: '#/components/schemas/PostGetAllRequest'
       responses:
         '200':
           description: Successful response with an array of posts and comments
@@ -58,7 +75,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/PostWithComments'
+                  $ref: '#/components/schemas/PostsPagedResult'
   /posts/{postID}/comments:
     post:
       summary: Create a new comment for a specific post
@@ -154,6 +171,28 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Comment'
+    PostGetAllRequest:
+      type: object
+      properties:
+        cursor_id:
+          type: integer
+          format: int64
+        page_size:
+          type: integer
+          format: int32
+    PostsPagedResult:
+      type: object
+      properties:
+        posts:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostWithComments'
+        next_cursor:
+          type: integer
+          format: int64
+        page_size:
+          type: integer
+          format: int32
     CreateCommentRequest:
       type: object
       properties:
@@ -172,3 +211,12 @@ components:
         signed_url:
           type: string
           description: The signed URL for uploading the image
+    ImageUploadedRequest:
+      type: object
+      properties:
+        bucket:
+          type: string
+          description: Object storage bucket name
+        path:
+          type: string
+          description: Object storage path to image

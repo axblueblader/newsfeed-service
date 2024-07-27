@@ -24,9 +24,9 @@ func (m *MockPostService) CreatePost(userID string, req domains.PostCreateReques
 	return args.Get(0).(uint), args.Error(1)
 }
 
-func (m *MockPostService) GetPostsWithComments(userID string) ([]domains.PostWithComments, error) {
-	args := m.Called(userID)
-	return args.Get(0).([]domains.PostWithComments), args.Error(1)
+func (m *MockPostService) GetPostsWithComments(userID string, cursor *uint, pageSize int) (*domains.PostsPagedResult, error) {
+	args := m.Called(userID, cursor, pageSize)
+	return args.Get(0).(*domains.PostsPagedResult), args.Error(1)
 }
 
 func TestCreatePostSuccess(t *testing.T) {

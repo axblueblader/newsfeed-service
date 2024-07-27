@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"newsfeed-service/domains"
 	"newsfeed-service/services"
@@ -27,8 +28,18 @@ func (h PostsHandler) CreatePost(c *gin.Context) {
 }
 
 func (h PostsHandler) RetrievePostWithComments(c *gin.Context) {
-	posts, err := h.PostService.GetPostsWithComments(GetUserID(c))
+	// default page size of 10
+	req := domains.PostGetAllRequest{
+		PageSize: 10,
+	}
+	err := c.BindQuery(&req)
 	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	posts, err := h.PostService.GetPostsWithComments(GetUserID(c), req.CursorID, req.PageSize)
+	if err != nil {
+		log.Println(err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

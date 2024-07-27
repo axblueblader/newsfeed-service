@@ -75,6 +75,7 @@ func main() {
 	authed.Use(middlewares.BearerTokenAuth())
 	{
 		authed.POST("/posts/images", imageHandler.GenerateSignedUrl)
+		authed.PUT("/posts/images/uploaded", imageHandler.ProcessPostImageUploaded)
 		authed.POST("/posts", postsHandler.CreatePost)
 		authed.GET("/posts", postsHandler.RetrievePostWithComments)
 		authed.POST("/posts/:postID/comments", commentsHandler.CreateComment)

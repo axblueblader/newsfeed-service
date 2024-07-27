@@ -15,3 +15,14 @@ type PostWithComments struct {
 	CreatedAt time.Time `json:"created_at"`
 	Comments  []Comment `json:"comments"`
 }
+
+type PostGetAllRequest struct {
+	CursorID *uint `form:"cursor_id"`
+	PageSize int   `form:"page_size"`
+}
+
+type PostsPagedResult struct {
+	Posts      []PostWithComments `json:"posts"`
+	NextCursor *uint              `json:"next_cursor"`
+	PageSize   int                `json:"page_size"`
+}

@@ -20,3 +20,21 @@ func (h ImagesHandler) GenerateSignedUrl(c *gin.Context) {
 		SignedUrl: h.ObjectStorage.GenerateSignedUrl(config.Env().PostImageBucketName, userId+"/"+imageUuid),
 	})
 }
+func (h ImagesHandler) ProcessPostImageUploaded(c *gin.Context) {
+	var req domains.ImageUploadedRequest
+	err := c.BindJSON(&req)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Do image conversion based
+	// convertImage(bucket,path)
+
+	// Replace the image in the current url
+	// replaceImage(bucket,path)
+
+	// Now the post will always serve the processed image
+
+	c.JSON(http.StatusOK, req)
+}

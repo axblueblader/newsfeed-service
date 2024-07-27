@@ -38,7 +38,7 @@ curl --location 'https://newsfeed-service-ogwuwsx3mq-de.a.run.app/posts/9/commen
 - Get all posts with latest 2 comments in each post
 
 ```curl
-curl --location 'https://newsfeed-service-ogwuwsx3mq-de.a.run.app/posts' \
+curl --location 'https://newsfeed-service-ogwuwsx3mq-de.a.run.app/posts?cursor_id=6&page_size=2' \
 --header 'Authorization: Bearer auth_token'
  ```
 
@@ -59,7 +59,19 @@ curl --location --request POST 'https://newsfeed-service-ogwuwsx3mq-de.a.run.app
 
 **Note:** Letting user upload to our service wastes a lot of bandwidth especially for the API gateway.\
 It's generally better to let user upload directly to storage via a signed url with fast expiration.\
-For validation and resizing requirements, we can run a function every time and upload event is consumed.
+For validation requirements, we can configure it using Bucket policy from the cloud provider
+
+- Webhook API called after an image is uploaded successfully to cloud storage
+
+```curl
+curl --location --request PUT 'https://newsfeed-service-ogwuwsx3mq-de.a.run.app/posts/images' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer cloud_token' \
+--data '{
+    "bucket": "post-image-bucket",
+    "path": "userid/uuid",
+}'
+```
 
 ### Running locally
 
