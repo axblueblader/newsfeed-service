@@ -50,7 +50,9 @@ curl --location --request DELETE 'https://newsfeed-service-ogwuwsx3mq-de.a.run.a
 --header 'Authorization: Bearer auth_token_2'
 ```
 
-- Generate a signed url to upload image (mock API)
+Mock APIs:
+
+- Generate a signed url to upload image
 
 ```curl
 curl --location --request POST 'https://newsfeed-service-ogwuwsx3mq-de.a.run.app/posts/images' \
@@ -61,7 +63,8 @@ curl --location --request POST 'https://newsfeed-service-ogwuwsx3mq-de.a.run.app
 It's generally better to let user upload directly to storage via a signed url with fast expiration.\
 For validation requirements, we can configure it using Bucket policy from the cloud provider
 
-- Webhook API called after an image is uploaded successfully to cloud storage
+- Webhook API called after an image is uploaded successfully to cloud storage. This API can then resize and convert the
+  uploaded image to JPG 600x600 and replace it in the same URL
 
 ```curl
 curl --location --request PUT 'https://newsfeed-service-ogwuwsx3mq-de.a.run.app/posts/images' \
@@ -72,6 +75,8 @@ curl --location --request PUT 'https://newsfeed-service-ogwuwsx3mq-de.a.run.app/
     "path": "userid/uuid",
 }'
 ```
+
+![Image upload design](image_upload_design.png)
 
 ### Running locally
 
