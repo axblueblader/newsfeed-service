@@ -6,7 +6,11 @@ Repository for Bandlab backend test assignment
 
 ### API
 
+More details in: [OpenAPI spec file](./api-spec.yaml)
+
 Host: https://newsfeed-service-ogwuwsx3mq-de.a.run.app
+
+For simplicity the auth_token is used as a user ID so `Bearer abcd` means userID = `abcd`
 
 - Create a post
 
@@ -38,7 +42,8 @@ curl --location 'https://newsfeed-service-ogwuwsx3mq-de.a.run.app/posts' \
 --header 'Authorization: Bearer auth_token'
  ```
 
-- Delete a comment, example: commentID = 7
+- Delete a comment, example: commentID = 7. **Note** both commentID and auth token must match since we should not be
+  able to delete another person's comment
 
 ```curl
 curl --location --request DELETE 'https://newsfeed-service-ogwuwsx3mq-de.a.run.app/comments/7' \
