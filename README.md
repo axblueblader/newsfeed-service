@@ -48,7 +48,7 @@ curl --location --request DELETE 'https://newsfeed-service-ogwuwsx3mq-de.a.run.a
 - Generate a signed url to upload image (mock API)
 
 ```curl
-curl --location --request POST 'https://newsfeed-service-ogwuwsx3mq-de.a.run.app/images' \
+curl --location --request POST 'https://newsfeed-service-ogwuwsx3mq-de.a.run.app/posts/images' \
 --header 'Authorization: Bearer auth_token'
 ```
 

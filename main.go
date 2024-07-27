@@ -53,11 +53,6 @@ func main() {
 	postService := services.NewPostService(postsDB)
 	commentService := services.NewCommentService(commentsDB)
 
-	r := gin.Default()
-
-	// middlewares
-	r.Use(middlewares.BearerTokenAuth())
-
 	// handlers
 	commentsHandler := handlers.CommentsHandler{
 		CommentService: commentService,
@@ -69,15 +64,22 @@ func main() {
 		ObjectStorage: objectStorage,
 	}
 
-	// all routes in one file for quick reference
-	r.POST("/posts/images", imageHandler.GenerateSignedUrl)
-	r.POST("/posts", postsHandler.CreatePost)
-	r.GET("/posts", postsHandler.RetrievePostWithComments)
-	r.POST("/posts/:postID/comments", commentsHandler.CreateComment)
-	r.DELETE("/comments/:commentID", commentsHandler.DeleteComment)
+	r := gin.Default()
 
+	// health check and non auth public endpoints
 	r.GET("/", handlers.Healthcheck)
 	r.GET("/health", handlers.Healthcheck)
+
+	// all routes in one file for quick reference
+	authed := r.Group("/")
+	authed.Use(middlewares.BearerTokenAuth())
+	{
+		authed.POST("/posts/images", imageHandler.GenerateSignedUrl)
+		authed.POST("/posts", postsHandler.CreatePost)
+		authed.GET("/posts", postsHandler.RetrievePostWithComments)
+		authed.POST("/posts/:postID/comments", commentsHandler.CreateComment)
+		authed.DELETE("/comments/:commentID", commentsHandler.DeleteComment)
+	}
 
 	err = r.Run(":" + config.Env().Port)
 	if err != nil {
