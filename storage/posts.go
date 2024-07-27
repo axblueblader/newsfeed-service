@@ -27,11 +27,6 @@ func (dao postDB) Create(post *models.Post) (*models.Post, error) {
 func (dao postDB) GetAllWithComments(userID string, cursorID *uint, pageSize int) ([]models.Post, *uint, error) {
 	var posts []models.Post
 	var postIDs []uint
-	type result struct {
-		ID           uint
-		CommentCount int
-	}
-	var results []result
 	// we can get next cursor or no cursor based on len(result) == pageSize
 	limit := pageSize + 1
 
@@ -42,10 +37,9 @@ func (dao postDB) GetAllWithComments(userID string, cursorID *uint, pageSize int
 
 	// without the outer select, it will miss posts with no comments
 	// get posts sort by highest comments, then sort by id and created_at for pagination
-	// if ID is auto increment, sort by created_at is enough but adding it for clarity in case ID is not auto increment
-	// if ID is hashed/random, we need to use created_at combined as cursor
+	// cursor needs to be unique and based around comment_count
 	selectClause := `
-            SELECT p.id, COALESCE(c.comment_count, 0) AS comment_count
+            SELECT p.*, COALESCE(c.comment_count, 0) AS comment_count
             FROM posts p
             LEFT JOIN (
                 SELECT post_id, COUNT(*) AS comment_count
@@ -62,14 +56,17 @@ func (dao postDB) GetAllWithComments(userID string, cursorID *uint, pageSize int
 
 	rawSql := selectClause + whereClause + orderAndLimit
 
-	err := dao.db.Raw(rawSql, args).Scan(&results).Error
+	err := dao.db.Raw(rawSql, args).Scan(&posts).Error
 
 	if err != nil {
 		return nil, nil, err
 	}
 
-	for _, row := range results {
-		postIDs = append(postIDs, row.ID)
+	postsMap := make(map[uint]int)
+	for i := range posts {
+		post := posts[i]
+		postsMap[post.ID] = i
+		postIDs = append(postIDs, post.ID)
 	}
 
 	// Calculate next cursor (if any)
@@ -77,17 +74,32 @@ func (dao postDB) GetAllWithComments(userID string, cursorID *uint, pageSize int
 	if len(postIDs) > pageSize {
 		nextCursor = &postIDs[pageSize]
 		postIDs = postIDs[:pageSize] // Remove the extra record
+		posts = posts[:pageSize]     // Remove the extra record
 	} else if len(postIDs) == 0 {
 		return posts, nil, nil
 	}
 
-	err = dao.db.Preload("Comments", func(tx *gorm.DB) *gorm.DB {
-		return tx.Order("created_at desc").Limit(config.Env().CommentsLimit)
-	}).
-		Where("creator = ? AND id IN ?", userID, postIDs).
-		Order("created_at desc").
-		Find(&posts).
-		Error
+	commentsPerPostsSql := `
+	SELECT c.*
+	FROM (
+		SELECT *, ROW_NUMBER() OVER (PARTITION BY post_id ORDER BY created_at DESC) AS row_number
+		FROM comments 
+		WHERE post_id IN ?
+		) as c
+	WHERE c.row_number <= ?`
 
+	var comments []models.Comment
+	err = dao.db.Raw(commentsPerPostsSql, postIDs, config.Env().CommentsLimit).Scan(&comments).Error
+	if err != nil {
+		return nil, nil, err
+	}
+	for i := range comments {
+		comment := comments[i]
+		post := &posts[postsMap[comment.PostID]]
+		if len(post.Comments) == 0 {
+			post.Comments = []models.Comment{}
+		}
+		post.Comments = append(post.Comments, comment)
+	}
 	return posts, nextCursor, err
 }
