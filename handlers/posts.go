@@ -37,7 +37,11 @@ func (h PostsHandler) RetrievePostWithComments(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	posts, err := h.PostService.GetPostsWithComments(GetUserID(c), req.CursorID, req.PageSize)
+	if (req.CommentCount != nil && req.CursorID == nil) || (req.CursorID != nil && req.CommentCount == nil) {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Need to have both comment count and cursor ID for correct paging"})
+		return
+	}
+	posts, err := h.PostService.GetPostsWithComments(GetUserID(c), req)
 	if err != nil {
 		log.Println(err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})

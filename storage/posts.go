@@ -2,7 +2,9 @@ package storage
 
 import (
 	"gorm.io/gorm"
+	"log"
 	"newsfeed-service/config"
+	"newsfeed-service/domains"
 	"newsfeed-service/models"
 )
 
@@ -16,7 +18,7 @@ func NewPostDB(db *gorm.DB) PostDB {
 
 type PostDB interface {
 	Create(post *models.Post) (*models.Post, error)
-	GetAllWithComments(userID string, cursorID *uint, pageSize int) ([]models.Post, *uint, error)
+	GetAllWithComments(userID string, cursor domains.PostGetAllRequest) ([]models.Post, *domains.PostGetAllRequest, error)
 }
 
 func (dao postDB) Create(post *models.Post) (*models.Post, error) {
@@ -24,10 +26,17 @@ func (dao postDB) Create(post *models.Post) (*models.Post, error) {
 	return post, err
 }
 
-func (dao postDB) GetAllWithComments(userID string, cursorID *uint, pageSize int) ([]models.Post, *uint, error) {
+type PostResult struct {
+	models.Post
+	CommentCount int
+}
+
+func (dao postDB) GetAllWithComments(userID string, cursor domains.PostGetAllRequest) ([]models.Post, *domains.PostGetAllRequest, error) {
 	var posts []models.Post
+	var postResults []PostResult
 	var postIDs []uint
 	// we can get next cursor or no cursor based on len(result) == pageSize
+	pageSize := cursor.PageSize
 	limit := pageSize + 1
 
 	args := map[string]interface{}{
@@ -47,36 +56,33 @@ func (dao postDB) GetAllWithComments(userID string, cursorID *uint, pageSize int
                 GROUP BY post_id
             ) c ON p.id = c.post_id
           `
-	whereClause := `WHERE p.creator = @userID `
-	if cursorID != nil {
-		whereClause = whereClause + `AND p.id <= @cursorID`
-		args["cursorID"] = *cursorID
+	whereClause := `WHERE p.creator = @userID`
+	if cursor.CommentCount != nil && cursor.CursorID != nil {
+		whereClause = whereClause + ` AND comment_count < @cmtCount OR (comment_count = @cmtCount AND p.id <= @cursorID) `
+		args["cursorID"] = *cursor.CursorID
+		args["cmtCount"] = *cursor.CommentCount
 	}
 	orderAndLimit := ` ORDER BY comment_count DESC, p.created_at DESC, p.id DESC LIMIT @limit`
 
 	rawSql := selectClause + whereClause + orderAndLimit
 
-	err := dao.db.Raw(rawSql, args).Scan(&posts).Error
+	err := dao.db.Raw(rawSql, args).Scan(&postResults).Error
 
 	if err != nil {
 		return nil, nil, err
 	}
 
-	postsMap := make(map[uint]int)
-	for i := range posts {
-		post := posts[i]
-		postsMap[post.ID] = i
-		postIDs = append(postIDs, post.ID)
+	log.Println(postResults)
+	if len(postResults) == 0 {
+		return posts, nil, nil
 	}
 
-	// Calculate next cursor (if any)
-	var nextCursor *uint
-	if len(postIDs) > pageSize {
-		nextCursor = &postIDs[pageSize]
-		postIDs = postIDs[:pageSize] // Remove the extra record
-		posts = posts[:pageSize]     // Remove the extra record
-	} else if len(postIDs) == 0 {
-		return posts, nil, nil
+	postsMap := make(map[uint]int)
+	for i := range postResults {
+		result := postResults[i]
+		posts = append(posts, result.Post)
+		postsMap[result.Post.ID] = i
+		postIDs = append(postIDs, result.Post.ID)
 	}
 
 	commentsPerPostsSql := `
@@ -100,6 +106,18 @@ func (dao postDB) GetAllWithComments(userID string, cursorID *uint, pageSize int
 			post.Comments = []models.Comment{}
 		}
 		post.Comments = append(post.Comments, comment)
+	}
+
+	// Calculate next cursor (if any)
+	var nextCursor *domains.PostGetAllRequest
+	if len(postIDs) > pageSize {
+		lastPost := posts[pageSize]
+		nextCursor = &domains.PostGetAllRequest{
+			CursorID:     &lastPost.ID,
+			CommentCount: &postResults[pageSize].CommentCount,
+		}
+		postIDs = postIDs[:pageSize] // Remove the extra record
+		posts = posts[:pageSize]     // Remove the extra record
 	}
 	return posts, nextCursor, err
 }

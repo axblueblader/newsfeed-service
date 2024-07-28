@@ -16,7 +16,7 @@ func NewPostService(postDB storage.PostDB) PostService {
 
 type PostService interface {
 	CreatePost(userID string, req domains.PostCreateRequest) (uint, error)
-	GetPostsWithComments(userID string, cursor *uint, pageSize int) (*domains.PostsPagedResult, error)
+	GetPostsWithComments(userID string, req domains.PostGetAllRequest) (*domains.PostsPagedResult, error)
 }
 
 func (s postService) CreatePost(userID string, req domains.PostCreateRequest) (uint, error) {
@@ -31,8 +31,8 @@ func (s postService) CreatePost(userID string, req domains.PostCreateRequest) (u
 	return post.ID, nil
 }
 
-func (s postService) GetPostsWithComments(userID string, cursor *uint, pageSize int) (*domains.PostsPagedResult, error) {
-	posts, nextCursor, err := s.postDB.GetAllWithComments(userID, cursor, pageSize)
+func (s postService) GetPostsWithComments(userID string, req domains.PostGetAllRequest) (*domains.PostsPagedResult, error) {
+	posts, nextCursor, err := s.postDB.GetAllWithComments(userID, req)
 	if err != nil {
 		return nil, err
 	}
@@ -57,9 +57,13 @@ func (s postService) GetPostsWithComments(userID string, cursor *uint, pageSize 
 			Comments:  comments,
 		})
 	}
-	return &domains.PostsPagedResult{
-		Posts:      postsWithComments,
-		NextCursor: nextCursor,
-		PageSize:   pageSize,
-	}, nil
+	result := &domains.PostsPagedResult{
+		Posts:    postsWithComments,
+		PageSize: req.PageSize,
+	}
+	if nextCursor != nil {
+		result.NextCursor = nextCursor.CursorID
+		result.CommentCount = nextCursor.CommentCount
+	}
+	return result, nil
 }

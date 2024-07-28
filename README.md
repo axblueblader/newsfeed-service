@@ -35,10 +35,17 @@ curl --location 'https://newsfeed-service-ogwuwsx3mq-de.a.run.app/posts/9/commen
 }'
 ```
 
-- Get all posts with latest 2 comments in each post
+- Get all posts with latest 2 comments in each post, first request
 
 ```curl
-curl --location 'https://newsfeed-service-ogwuwsx3mq-de.a.run.app/posts?cursor_id=6&page_size=2' \
+curl --location 'https://newsfeed-service-ogwuwsx3mq-de.a.run.app/posts?comment_count=9cursor_id=6&page_size=2' \
+--header 'Authorization: Bearer auth_token'
+```
+
+- Get posts with latest 2 comments in each post, with subsequent pagination
+
+```curl
+curl --location 'https://newsfeed-service-ogwuwsx3mq-de.a.run.app/posts?comment_count=9cursor_id=6&page_size=2' \
 --header 'Authorization: Bearer auth_token'
  ```
 

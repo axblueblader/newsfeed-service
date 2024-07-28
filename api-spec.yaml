@@ -177,6 +177,9 @@ components:
         cursor_id:
           type: integer
           format: int64
+        comment_count:
+          type: integer
+          format: int32
         page_size:
           type: integer
           format: int32
@@ -190,6 +193,9 @@ components:
         next_cursor:
           type: integer
           format: int64
+        comment_count:
+          type: integer
+          format: int32
         page_size:
           type: integer
           format: int32

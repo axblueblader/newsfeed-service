@@ -17,12 +17,14 @@ type PostWithComments struct {
 }
 
 type PostGetAllRequest struct {
-	CursorID *uint `form:"cursor_id"`
-	PageSize int   `form:"page_size"`
+	CursorID     *uint `form:"cursor_id"`
+	CommentCount *int  `form:"comment_count"`
+	PageSize     int   `form:"page_size"`
 }
 
 type PostsPagedResult struct {
-	Posts      []PostWithComments `json:"posts"`
-	NextCursor *uint              `json:"next_cursor"`
-	PageSize   int                `json:"page_size"`
+	Posts        []PostWithComments `json:"posts"`
+	NextCursor   *uint              `json:"next_cursor"`
+	CommentCount *int               `json:"comment_count"`
+	PageSize     int                `json:"page_size"`
 }
