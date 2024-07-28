@@ -1,6 +1,6 @@
 # newsfeed-service
 
-Repository for Bandlab backend test assignment
+Repository for a mock newsfeed service with post and comment features
 
 ## Quickstart
 
@@ -35,10 +35,10 @@ curl --location 'https://newsfeed-service-ogwuwsx3mq-de.a.run.app/posts/9/commen
 }'
 ```
 
-- Get all posts with latest 2 comments in each post, first request
+- Get all posts with latest 2 comments in each post, first request. Page size is 10 by default
 
 ```curl
-curl --location 'https://newsfeed-service-ogwuwsx3mq-de.a.run.app/posts?comment_count=9cursor_id=6&page_size=2' \
+curl --location 'https://newsfeed-service-ogwuwsx3mq-de.a.run.app/posts' \
 --header 'Authorization: Bearer auth_token'
 ```
 
@@ -118,10 +118,13 @@ go run main.go
 Code:
 
 - Use a proper library to load config
+- Use a better logger library and add more logs
 - Remove embedded Postgres database and connect to a real one
 - Add tracing
 - Add a real object storage API client
-- Add a cloud function to validate and resize that runs when an image is uploaded to object storage
+- Implement image processing code that runs when an image is uploaded to object storage
+- Use a mock generator for interfaces used in unit tests
+- Add more unit tests
 
 Deployments:
 
